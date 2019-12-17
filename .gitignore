@@ -1,0 +1,24 @@
+# jupyter notebook checkpoints
+.ipynb_checkpoints
+
+# numpy saves
+*.npz
+*.npy
+
+# matlab data
+*.mat
+
+# generated graph files
+*.gml
+
+# compiled py
+*.pyc
+
+# json generated datasets
+*.json
+
+# result saves
+*.pkl
+
+# generated figures
+*.svg
