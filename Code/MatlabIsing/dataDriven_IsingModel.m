@@ -58,7 +58,7 @@ if verbose
     disp([step , alpha, Beff/B, log(epsOpMcOld), log(epsOpMc)]);
 end
 output = [ step, alpha , epsOpMc , Beff];
-while epsOpMc > epsThreshold
+while (epsOpMc > epsThreshold) && (step<150)
     
 
     jListTry = params + alpha * contraGrad;

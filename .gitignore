@@ -22,6 +22,8 @@
 
 # generated figures
 *.svg
+*.pdf
+*.png
 
 # text raster imports
 *.txt

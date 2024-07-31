@@ -4,14 +4,53 @@ from scipy.io import loadmat,savemat
 from scipy import sparse
 from jpype import *
 import os
-
+import scipy.io as spio
 FILENAME = "../Data/spktimes_4_exps_6_conds.mat"
-JITD = 1
-if JITD:
-    jarLocation = "external/infodynamics.jar"
-    startJVM(getDefaultJVMPath(), "-ea", "-Djava.class.path=" + jarLocation) #Start JITDready JVM ->shutdownJVM()
-    print("JVM Started")
 
+try:
+    JITD = 1
+    if JITD:
+        jarLocation = "external/infodynamics.jar"
+        startJVM(getDefaultJVMPath(), "-ea", "-Djava.class.path=" + jarLocation) #Start JITDready JVM ->shutdownJVM()
+        print("JVM Started")
+except Exception:
+    pass
+    
+
+def loadmat(filename):
+    '''
+    this function should be called instead of direct spio.loadmat
+    as it cures the problem of not properly recovering python dictionaries
+    from mat files. It calls the function check keys to cure all entries
+    which are still mat-objects
+    '''
+    data = spio.loadmat(filename, struct_as_record=False, squeeze_me=True)
+    return _check_keys(data)
+
+def _check_keys(dict):
+    '''
+    checks if entries in dictionary are mat-objects. If yes
+    todict is called to change them to nested dictionaries
+    '''
+    for key in dict:
+        if isinstance(dict[key], spio.matlab.mio5_params.mat_struct):
+            dict[key] = _todict(dict[key])
+    return dict        
+
+def _todict(matobj):
+    '''
+    A recursive function which constructs from matobjects nested dictionaries
+    '''
+    dict = {}
+    for strg in matobj._fieldnames:
+        elem = matobj.__dict__[strg]
+        if isinstance(elem, spio.matlab.mio5_params.mat_struct):
+            dict[strg] = _todict(elem)
+        else:
+            dict[strg] = elem
+    return dict
+    
+    
 def dataLoader(exp,cond,tbase):
     rasterfile = "../Data/Sparse/E{0}_C{1}_T{2}".format(exp,cond,tbase)
     if os.path.isfile(rasterfile+".npz"):
@@ -31,6 +70,12 @@ def dataLoader(exp,cond,tbase):
     sparse.save_npz(rasterfile,sparse.csr_matrix(raster))
     return raster,Ncount
 
+
+def dataLoaderTxt():
+    with open("../Data/bint.txt") as O:
+        file = O.readlines()
+    file = [list(map(int,x.strip().split())) for x in file]
+    return np.array(file)
 
 def Entropy(exp,cond,tbase):
     hfile="../Data/PreComputed/H/E{0}_C{1}_T{2}".format(exp,cond,tbase)
